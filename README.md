@@ -1,1 +1,728 @@
-# RESPALDO
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Sistema de Stock - Café </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Diseño temático, misma lógica */
+        body { background-color: #FAF6F3; font-family: 'Inter', sans-serif; }
+        .card-action { background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(74, 48, 34, 0.05); transition: all 0.2s; cursor: pointer; border: 1px solid #F5EBE6; }
+        .card-action:active { transform: scale(0.97); background: #FDFBF9; }
+        .hidden { display: none !important; }
+        .btn-tipo { border: 2px solid #E6D5C9; transition: all 0.2s; width: 100%; font-weight: 800; }
+        .active-entrada { border-color: #10b981; background-color: #ecfdf5; color: #059669; }
+        .active-salida { border-color: #ef4444; background-color: #fef2f2; color: #dc2626; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #4A3022; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 40; box-shadow: 0 10px 20px rgba(74, 48, 34, 0.3); cursor: pointer; transition: transform 0.2s; }
+        .fab:active { transform: scale(0.90); }
+    </style>
+</head>
+<body class="p-6 relative">
+
+    <div class="fixed top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-amber-100 opacity-50 blur-3xl pointer-events-none"></div>
+
+    <div id="home-screen" class="max-w-md mx-auto relative z-10">
+        <header class="mb-10 mt-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-black text-[#4A3022] tracking-tight">
+                    <i class="fas fa-mug-hot text-amber-600 mr-2"></i>Café Stock
+                </h1>
+                <p class="text-amber-800/60 font-medium">Gestión de Inventario</p>
+            </div>
+        </header>
+        <div class="grid gap-4">
+            <div onclick="abrirCarga()" class="card-action p-6 flex items-center gap-4 border-l-4 border-l-emerald-500">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-plus-minus"></i></div>
+                <div><h3 class="font-bold text-[#4A3022]">Registrar Movimiento</h3><p class="text-xs text-amber-800/50">Entradas y salidas</p></div>
+            </div>
+            <div onclick="verProductos()" class="card-action p-6 flex items-center gap-4 border-l-4 border-l-amber-500">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-box-open"></i></div>
+                <div><h3 class="font-bold text-[#4A3022]">Productos</h3><p class="text-xs text-amber-800/50">Ver y administrar ítems</p></div>
+            </div>
+            <div onclick="verHistorial()" class="card-action p-6 flex items-center gap-4 border-l-4 border-l-[#4A3022]">
+                <div class="w-12 h-12 bg-[#F5EBE6] text-[#4A3022] rounded-2xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-history"></i></div>
+                <div><h3 class="font-bold text-[#4A3022]">Historial</h3><p class="text-xs text-amber-800/50">Últimos registros</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="movimientos-screen" class="hidden max-w-md mx-auto relative z-10">
+        <button onclick="showPage('home')" class="mb-6 text-amber-800/60 font-bold flex items-center gap-2"><i class="fas fa-chevron-left"></i> VOLVER</button>
+        <div class="bg-white p-6 rounded-[32px] shadow-sm border border-[#F5EBE6]">
+            <h2 class="text-xl font-black text-[#4A3022] mb-6">Nuevo Registro</h2>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Tipo</label>
+                    <div class="grid grid-cols-2 gap-3 mt-2">
+                        <button id="btn-ent" onclick="setTipo('Entrada')" class="btn-tipo p-4 rounded-2xl active-entrada">ENTRADA</button>
+                        <button id="btn-sal" onclick="setTipo('Salida')" class="btn-tipo p-4 rounded-2xl text-amber-800/40 bg-[#FAF6F3]">SALIDA</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Producto</label>
+                    <select id="selectProd" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-bold text-[#4A3022] mt-2 border-none appearance-none"></select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Cantidad</label>
+                    <input type="number" id="inputCant" placeholder="0" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-black text-[#4A3022] mt-2 text-xl">
+                </div>
+                <button onclick="guardarMov()" id="btnSave" class="w-full bg-[#4A3022] text-white p-5 rounded-2xl font-bold shadow-xl active:bg-black transition-all">CONFIRMAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="productos-screen" class="hidden max-w-md mx-auto relative z-10">
+        <button onclick="showPage('home')" class="mb-6 text-amber-800/60 font-bold flex items-center gap-2"><i class="fas fa-chevron-left"></i> VOLVER</button>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-black text-[#4A3022] tracking-tight">Inventario</h2>
+            <button onclick="verProductos()" class="text-amber-600 text-xs font-bold active:text-amber-800"><i class="fas fa-sync"></i> ACTUALIZAR</button>
+        </div>
+        
+        <div class="mb-6 relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-amber-800/40">
+                <i class="fas fa-search"></i>
+            </div>
+            <input type="text" id="buscador-productos" onkeyup="filtrarProductos()" placeholder="Buscar producto..." class="w-full pl-11 pr-4 py-4 bg-white border border-[#E6D5C9] rounded-2xl outline-none font-bold text-[#4A3022] focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all shadow-sm">
+        </div>
+
+        <div id="lista-prods" class="grid gap-3 mb-24"></div>
+        
+        <div onclick="nuevoProdPrompt()" class="fab shadow-xl"><i class="fas fa-plus"></i></div>
+    </div>
+
+    <div id="historial-screen" class="hidden max-w-md mx-auto relative z-10">
+        <button onclick="showPage('home')" class="mb-6 text-amber-800/60 font-bold flex items-center gap-2"><i class="fas fa-chevron-left"></i> VOLVER</button>
+        <h2 class="text-xl font-black text-[#4A3022] mb-4 tracking-tight">Historial</h2>
+        
+        <div class="flex gap-2 mb-6 bg-[#E6D5C9]/50 p-1 rounded-2xl">
+            <button id="filtro-todos" onclick="filtrarHistorial('Todos')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow-sm text-[#4A3022] transition-all">TODOS</button>
+            <button id="filtro-entradas" onclick="filtrarHistorial('Entrada')" class="flex-1 py-2 text-xs font-bold rounded-xl text-amber-800/60 hover:text-[#4A3022] transition-all">ENTRADAS</button>
+            <button id="filtro-salidas" onclick="filtrarHistorial('Salida')" class="flex-1 py-2 text-xs font-bold rounded-xl text-amber-800/60 hover:text-[#4A3022] transition-all">SALIDAS</button>
+        </div>
+
+        <div id="lista-hist" class="grid gap-3 mb-6"></div>
+    </div>
+
+    <div id="modal-producto" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+        <div class="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl">
+            <h2 class="text-2xl font-black text-[#4A3022] mb-6">Nuevo Producto</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Nombre</label>
+                    <input type="text" id="new-prod-nombre" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-bold text-[#4A3022] mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Stock Inicial</label>
+                    <input type="number" id="new-prod-inicial" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-bold text-[#4A3022] mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Stock Mínimo</label>
+                    <input type="number" id="new-prod-min" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-bold text-[#4A3022] mt-1">
+                </div>
+                <div class="flex gap-3 mt-4">
+                    <button onclick="cerrarModal()" class="flex-1 p-4 text-amber-800/50 font-bold active:text-[#4A3022]">CANCELAR</button>
+                    <button id="btnCrear" onclick="confirmarNuevoProducto()" class="flex-1 bg-[#4A3022] text-white p-4 rounded-2xl font-bold shadow-lg active:bg-black">CREAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-alerta" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-6 z-[60]">
+        <div class="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl text-center">
+            <div id="alerta-icono" class="w-16 h-16 mx-auto bg-amber-50 text-amber-600 rounded-full flex items-center justify-center text-3xl mb-4">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <h2 id="alerta-titulo" class="text-xl font-black text-[#4A3022] mb-2">Aviso</h2>
+            <p id="alerta-mensaje" class="text-amber-800/70 font-medium mb-6 text-sm break-words">Mensaje</p>
+            <div class="flex gap-3" id="alerta-botones"></div>
+        </div>
+    </div>
+
+    <div id="modal-editar-producto" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+        <div class="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl">
+            <h2 class="text-2xl font-black text-[#4A3022] mb-6">Editar Producto</h2>
+            <input type="hidden" id="edit-prod-id">
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Nombre</label>
+                    <input type="text" id="edit-prod-nombre" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-bold text-[#4A3022] mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Stock Inicial</label>
+                    <input type="number" id="edit-prod-inicial" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-bold text-[#4A3022] mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-amber-800/50 uppercase tracking-widest ml-1">Stock Mínimo</label>
+                    <input type="number" id="edit-prod-min" class="w-full p-4 bg-[#FAF6F3] rounded-2xl outline-none font-bold text-[#4A3022] mt-1">
+                </div>
+                <div class="flex gap-3 mt-4">
+                    <button onclick="cerrarModalEditar()" class="flex-1 p-4 text-amber-800/50 font-bold active:text-[#4A3022]">CANCELAR</button>
+                    <button id="btnGuardarEdicion" onclick="guardarEdicionProducto()" class="flex-1 bg-amber-600 text-white p-4 rounded-2xl font-bold shadow-lg active:bg-amber-700">GUARDAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+<script>
+        // =========================================================================
+        // 1. VARIABLES GLOBALES Y CREDENCIALES
+        // =========================================================================
+        
+        const API = {
+            id: "adc13804-5f5a-47de-890f-2af540bdc06c",
+            key: "V2-XxyA3-fX06O-7PREY-nEyX7-yd9Jj-enQLQ-huONz-kEFDr",
+            mov: "MOVIMIENTOS",
+            prod: "PRODUCTOS"
+        };
+
+        let tipoSel = "Entrada";
+        let confirmCallback = null;
+        let datosHistorial = [];
+        let mapaNombresHistorial = {};
+        let filtroHistorial = 'Todos';
+        let datosProductos = [];
+        let stockMapaProductos = {};
+
+
+        // =========================================================================
+        // 2. UTILIDADES GENERALES
+        // =========================================================================
+
+        function getId(fila) {
+            return fila["Row ID"] || fila.ID_PRODUCTO;
+        }
+
+        function fechaArg(fechaStr) {
+            if (!fechaStr) return '';
+            const partes = fechaStr.split(':');
+            if (partes.length === 3) {
+                return partes[0] + ':' + partes[1];
+            }
+            return fechaStr;
+        }
+        
+        async function enviarAlertaMail(nombreProd, stockActual, stockMin) {
+            const urlBackend = 'https://script.google.com/macros/s/AKfycby-xqsZNN4mp6vilUnle0i5M5iqbuD75UwklzAnI-MZ-5Kzsg7UBi0_hh5RemC-_W4uYg/exec';
+            try {
+                // Lo mandamos usando fetch, sin "await" para que no congele la pantalla del usuario
+                fetch(urlBackend, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "sendEmail",
+                        nombreProd: nombreProd,
+                        stockActual: stockActual,
+                        stockMin: stockMin
+                    })
+                });
+            } catch (e) {
+                console.log("Error silencioso al mandar mail:", e);
+            }
+        }
+
+
+        // =========================================================================
+        // 3. CONTROL DE INTERFAZ Y NAVEGACIÓN
+        // =========================================================================
+
+        function showPage(p) {
+            document.querySelectorAll('div[id$="-screen"]').forEach(d => d.classList.add('hidden'));
+            document.getElementById(p + '-screen').classList.remove('hidden');
+        }
+
+        function setTipo(t) {
+            tipoSel = t;
+            document.getElementById('btn-ent').className = t === 'Entrada' ? "btn-tipo p-4 rounded-2xl active-entrada" : "btn-tipo p-4 rounded-2xl text-slate-400 bg-slate-50";
+            document.getElementById('btn-sal').className = t === 'Salida' ? "btn-tipo p-4 rounded-2xl active-salida" : "btn-tipo p-4 rounded-2xl text-slate-400 bg-slate-50";
+        }
+
+        function nuevoProdPrompt() { document.getElementById('modal-producto').classList.remove('hidden'); }
+        function cerrarModal() { document.getElementById('modal-producto').classList.add('hidden'); }
+
+
+        // =========================================================================
+        // 4. SISTEMA DE ALERTAS Y CONFIRMACIONES
+        // =========================================================================
+
+        function mostrarAlerta(mensaje, tipo = 'info') {
+            document.getElementById('modal-alerta').classList.remove('hidden');
+            document.getElementById('alerta-mensaje').innerText = mensaje;
+            const icono = document.getElementById('alerta-icono');
+            
+            if (tipo === 'error') {
+                icono.className = "w-16 h-16 mx-auto bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mb-4";
+                icono.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                document.getElementById('alerta-titulo').innerText = "Error";
+            } else if (tipo === 'exito') {
+                icono.className = "w-16 h-16 mx-auto bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-3xl mb-4";
+                icono.innerHTML = '<i class="fas fa-check"></i>';
+                document.getElementById('alerta-titulo').innerText = "¡Listo!";
+            } else {
+                icono.className = "w-16 h-16 mx-auto bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-3xl mb-4";
+                icono.innerHTML = '<i class="fas fa-info-circle"></i>';
+                document.getElementById('alerta-titulo').innerText = "Aviso";
+            }
+            
+            document.getElementById('alerta-botones').innerHTML = '<button onclick="cerrarAlerta()" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-bold shadow-lg active:bg-black">ENTENDIDO</button>';
+        }
+
+        function mostrarConfirmacion(mensaje, callback) {
+            document.getElementById('modal-alerta').classList.remove('hidden');
+            document.getElementById('alerta-mensaje').innerText = mensaje;
+            document.getElementById('alerta-titulo').innerText = "¿Estás seguro?";
+            
+            const icono = document.getElementById('alerta-icono');
+            icono.className = "w-16 h-16 mx-auto bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mb-4";
+            icono.innerHTML = '<i class="fas fa-question"></i>';
+
+            confirmCallback = callback;
+            document.getElementById('alerta-botones').innerHTML = `
+                <button onclick="cerrarAlerta()" class="flex-1 p-4 text-slate-400 font-bold active:text-slate-600">CANCELAR</button>
+                <button onclick="ejecutarConfirmacion()" class="flex-1 bg-amber-500 text-white p-4 rounded-2xl font-bold shadow-lg active:bg-amber-600">CONFIRMAR</button>
+            `;
+        }
+
+        function cerrarAlerta() { document.getElementById('modal-alerta').classList.add('hidden'); }
+        function ejecutarConfirmacion() { cerrarAlerta(); if (confirmCallback) confirmCallback(); }
+
+
+        // =========================================================================
+        // 5. CONEXIÓN AL BACKEND Y MEMORIA LOCAL (CACHÉ)
+        // =========================================================================
+
+        async function callAppSheet(tableName, action, rows = []) {
+            const urlBackend = 'https://script.google.com/macros/s/AKfycby-xqsZNN4mp6vilUnle0i5M5iqbuD75UwklzAnI-MZ-5Kzsg7UBi0_hh5RemC-_W4uYg/exec';
+            
+            try {
+                const response = await fetch(urlBackend, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        tableName: tableName,
+                        payload: { 
+                            "Action": action, 
+                            "Properties": { "Locale": "es-AR", "Timezone": "America/Argentina/Buenos_Aires" }, 
+                            "Rows": rows 
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                return data;
+                
+            } catch (error) {
+                throw new Error("Error del Servidor: " + error.message);
+            }
+        }
+
+        async function syncDatos() {
+            const [prods, movs] = await Promise.all([callAppSheet(API.prod, "Find"), callAppSheet(API.mov, "Find")]);
+            localStorage.setItem('stock_prods', JSON.stringify(prods));
+            localStorage.setItem('stock_movs', JSON.stringify(movs));
+            return { prods, movs };
+        }
+
+        function getDatosLocales() {
+            const prods = JSON.parse(localStorage.getItem('stock_prods') || '[]');
+            const movs = JSON.parse(localStorage.getItem('stock_movs') || '[]');
+            return { prods, movs };
+        }
+
+
+        // =========================================================================
+        // 6. MÓDULO: REGISTRAR MOVIMIENTOS
+        // =========================================================================
+
+        async function abrirCarga() {
+            showPage('movimientos');
+            const sel = document.getElementById('selectProd');
+            
+            const locales = getDatosLocales();
+            if (locales.prods.length > 0) procesarSelectCarga(locales.prods, locales.movs, sel);
+            else sel.innerHTML = '<option value="">Cargando base de datos...</option>';
+
+            try {
+                const frescos = await syncDatos();
+                procesarSelectCarga(frescos.prods, frescos.movs, sel);
+            } catch (e) {
+                if (locales.prods.length === 0) {
+                    sel.innerHTML = '<option value="">Error de servidor</option>';
+                    mostrarAlerta(e.message, "error"); 
+                }
+            }
+        }
+
+        function procesarSelectCarga(prods, movs, sel) {
+            window.stockGlobal = {}; 
+            window.minGlobal = {}; // NUEVO: Guardamos en memoria el stock mínimo de cada producto
+            
+            prods.forEach(p => {
+                window.stockGlobal[getId(p)] = 0;
+                window.minGlobal[getId(p)] = parseInt(p["STOCK MINIMO"]) || 0;
+            });
+            
+            movs.forEach(m => {
+                const cant = parseInt(m.CANTIDAD) || 0;
+                if (m.TIPO === 'Entrada') window.stockGlobal[m.PRODUCTO] += cant;
+                else window.stockGlobal[m.PRODUCTO] -= cant;
+            });
+            
+            sel.innerHTML = '<option value="">Seleccionar Producto...</option>' + prods.map(p => {
+                const idReal = getId(p);
+                const disp = window.stockGlobal[idReal] || 0;
+                return `<option value="${idReal}">${p.NOMBRE} (Disp: ${disp})</option>`;
+            }).join('');
+        }
+       
+async function guardarMov() {
+            const btn = document.getElementById('btnSave');
+            const cantInput = document.getElementById('inputCant');
+            const cant = parseInt(cantInput.value);
+            const selProd = document.getElementById('selectProd');
+            const idProd = selProd.value; 
+
+            if (!idProd || idProd === "") return mostrarAlerta("Por favor, selecciona un producto válido.", "error");
+            if (!cant || cant <= 0) return mostrarAlerta("Ingresa una cantidad mayor a cero.", "error");
+
+            if (tipoSel === 'Salida') {
+                const stockDisponible = window.stockGlobal ? (window.stockGlobal[idProd] || 0) : 0;
+                if (cant > stockDisponible) {
+                    return mostrarAlerta(`No podés retirar ${cant}. Solo tenés ${stockDisponible} en stock.`, "error");
+                }
+            }
+
+            btn.disabled = true; 
+            btn.innerText = "GUARDANDO...";
+            
+            try {
+                const d = new Date();
+                const dia = String(d.getDate()).padStart(2, '0');
+                const mes = String(d.getMonth() + 1).padStart(2, '0');
+                const anio = d.getFullYear();
+                const horas = String(d.getHours()).padStart(2, '0');
+                const minutos = String(d.getMinutes()).padStart(2, '0');
+                const segundos = String(d.getSeconds()).padStart(2, '0');
+                const fechaAppSheet = `${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`;
+
+                await callAppSheet(API.mov, "Add", [{
+                    "PRODUCTO": idProd, 
+                    "CANTIDAD": cant, 
+                    "TIPO": tipoSel, 
+                    "FECHA": fechaAppSheet
+                }]);
+                
+                // Actualizamos la memoria
+                if (tipoSel === 'Entrada') {
+                    window.stockGlobal[idProd] += cant;
+                } else {
+                    window.stockGlobal[idProd] -= cant;
+                }
+                
+                const opcion = selProd.options[selProd.selectedIndex];
+                const nombreProd = opcion.text.split(' (Disp:')[0];
+                opcion.text = `${nombreProd} (Disp: ${window.stockGlobal[idProd]})`;
+                
+                // --- NUEVO: CHEQUEO DE STOCK MÍNIMO PARA MANDAR MAIL ---
+                const stockFinal = window.stockGlobal[idProd];
+                const stockMinimo = window.minGlobal[idProd];
+                
+                // Si es salida y perforó el piso, manda correo y cambia el texto de la alerta
+                if (tipoSel === 'Salida' && stockFinal <= stockMinimo) {
+                    enviarAlertaMail(nombreProd, stockFinal, stockMinimo);
+                    mostrarAlerta(`Movimiento guardado. ¡Ojo! Stock bajo de ${nombreProd}`, "info");
+                } else {
+                    mostrarAlerta("¡Movimiento guardado exitosamente!", "exito"); 
+                }
+                // --------------------------------------------------------
+
+                cantInput.value = ''; 
+                
+            } catch (e) { 
+                mostrarAlerta(e.message, "error"); 
+            }
+            
+            btn.disabled = false; 
+            btn.innerText = "CONFIRMAR";
+        }
+        // =========================================================================
+        // 7. MÓDULO: GESTIÓN DE PRODUCTOS E INVENTARIO
+        // =========================================================================
+
+        async function verProductos() {
+            showPage('productos');
+            const cont = document.getElementById('lista-prods');
+            document.getElementById('buscador-productos').value = ''; 
+            
+            const locales = getDatosLocales();
+            if (locales.prods.length > 0) procesarYRenderizarProductos(locales.prods, locales.movs);
+            else cont.innerHTML = '<div class="text-center py-10"><i class="fas fa-circle-notch fa-spin text-3xl text-blue-500 mb-2"></i><p class="text-slate-400 italic">Sincronizando por primera vez...</p></div>';
+
+            try {
+                const frescos = await syncDatos();
+                procesarYRenderizarProductos(frescos.prods, frescos.movs);
+            } catch (e) { 
+                if (locales.prods.length === 0) {
+                    cont.innerHTML = '<p class="text-center text-red-500 font-bold mt-10">Fallo de conexión.</p>';
+                    mostrarAlerta(e.message, "error"); 
+                }
+            }
+        }
+
+        function procesarYRenderizarProductos(prods, movs) {
+            stockMapaProductos = {};
+            prods.forEach(p => stockMapaProductos[getId(p)] = 0);
+            movs.forEach(m => {
+                const cant = parseInt(m.CANTIDAD) || 0;
+                if (m.TIPO === 'Entrada') stockMapaProductos[m.PRODUCTO] += cant;
+                else stockMapaProductos[m.PRODUCTO] -= cant;
+            });
+            datosProductos = prods; 
+            renderizarProductos(datosProductos);
+        }
+
+        function filtrarProductos() {
+            const texto = document.getElementById('buscador-productos').value.toLowerCase();
+            const filtrados = datosProductos.filter(p => p.NOMBRE.toLowerCase().includes(texto));
+            renderizarProductos(filtrados);
+        }
+
+        function renderizarProductos(prodsArray) {
+            const cont = document.getElementById('lista-prods');
+            if(prodsArray.length === 0) {
+                cont.innerHTML = '<p class="text-center text-slate-400 font-bold mt-10">No se encontraron productos.</p>';
+                return;
+            }
+            cont.innerHTML = prodsArray.map(p => {
+                const idReal = getId(p);
+                const stock = stockMapaProductos[idReal] || 0;
+                const min = parseInt(p["STOCK MINIMO"]) || 0;
+                const inicial = parseInt(p["STOCK INICIAL"]) || 0;
+                const bajo = stock <= min;
+                return `
+                <div class="bg-white p-5 rounded-2xl border ${bajo ? 'border-red-200 bg-red-50' : 'border-slate-100'} shadow-sm flex justify-between items-center">
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-700">${p.NOMBRE}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">Stock: ${stock} | Mín: ${min}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="abrirModalEditar('${idReal}', '${p.NOMBRE}', ${inicial}, ${min})" class="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-pen text-sm"></i></button>
+                        <button onclick="borrarProducto('${idReal}', '${p.NOMBRE}')" class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-trash-can text-sm"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function abrirModalEditar(id, nombre, inicial, min) {
+            document.getElementById('edit-prod-id').value = id;
+            document.getElementById('edit-prod-nombre').value = nombre;
+            document.getElementById('edit-prod-inicial').value = inicial;
+            document.getElementById('edit-prod-min').value = min;
+            document.getElementById('modal-editar-producto').classList.remove('hidden');
+        }
+
+        function cerrarModalEditar() { document.getElementById('modal-editar-producto').classList.add('hidden'); }
+
+        async function guardarEdicionProducto() {
+            const id = document.getElementById('edit-prod-id').value;
+            const n = document.getElementById('edit-prod-nombre').value;
+            const i = parseInt(document.getElementById('edit-prod-inicial').value) || 0;
+            const m = parseInt(document.getElementById('edit-prod-min').value) || 0;
+            
+            if (!n) return mostrarAlerta("El nombre es obligatorio", "error");
+            
+            const btn = document.getElementById('btnGuardarEdicion');
+            btn.disabled = true; btn.innerText = "GUARDANDO...";
+            
+            try {
+                // Mandamos la orden "Edit" con el ID exacto
+                await callAppSheet(API.prod, "Edit", [{ 
+                    "Row ID": id,
+                    "NOMBRE": n, 
+                    "STOCK MINIMO": m,
+                    "STOCK INICIAL": i
+                }]);
+                mostrarAlerta("Producto actualizado", "exito");
+                cerrarModalEditar();
+                verProductos(); // Recarga la lista para mostrar los cambios
+            } catch (e) { mostrarAlerta(e.message, "error"); }
+            
+            btn.disabled = false; btn.innerText = "GUARDAR";
+        }
+
+        async function confirmarNuevoProducto() {
+            const nInput = document.getElementById('new-prod-nombre');
+            const iInput = document.getElementById('new-prod-inicial');
+            const mInput = document.getElementById('new-prod-min');
+            
+            const n = nInput.value;
+            const i = parseInt(iInput.value) || 0;
+            const m = parseInt(mInput.value) || 0;
+            
+            if (!n) return mostrarAlerta("El nombre es obligatorio", "error");
+            if (i < 0) return mostrarAlerta("El stock inicial no puede ser negativo", "error");
+            if (m < 0) return mostrarAlerta("El stock mínimo no puede ser negativo", "error");
+            
+            const btn = document.getElementById('btnCrear');
+            btn.disabled = true; 
+            btn.innerText = "CREANDO...";
+            
+            try {
+                await callAppSheet(API.prod, "Add", [{ 
+                    "NOMBRE": n, 
+                    "STOCK MINIMO": m,
+                    "STOCK INICIAL": i
+                }]);
+                
+                mostrarAlerta("Producto creado correctamente", "exito");
+                cerrarModal();
+                
+                nInput.value = '';
+                iInput.value = '';
+                mInput.value = '';
+                
+                if (!document.getElementById('productos-screen').classList.contains('hidden')) {
+                    verProductos();
+                }
+                
+            } catch (e) { 
+                mostrarAlerta(e.message, "error"); 
+            }
+            
+            btn.disabled = false; 
+            btn.innerText = "CREAR";
+        }
+
+        async function borrarProducto(id, nombre) {
+            mostrarConfirmacion(`¿Borrar "${nombre}" y todo su historial?`, async () => {
+                try {
+                    mostrarAlerta(`Limpiando registros de ${nombre}...`, "info");
+
+                    const todosLosMovs = await callAppSheet(API.mov, "Find");
+                    
+                    const movsDelProducto = todosLosMovs
+                        .filter(m => m.PRODUCTO === id)
+                        .map(m => ({ "Row ID": m["Row ID"] || m._RowNumber })); 
+
+                    if (movsDelProducto.length > 0) {
+                        await callAppSheet(API.mov, "Delete", movsDelProducto);
+                    }
+
+                    await callAppSheet(API.prod, "Delete", [{ "Row ID": id }]);
+                    
+                    mostrarAlerta("Producto y movimientos eliminados", "exito");
+                    verProductos(); 
+                    
+                } catch (e) {
+                    mostrarAlerta("Error en la limpieza: " + e.message, "error");
+                }
+            });
+        }
+
+
+        // =========================================================================
+        // 8. MÓDULO: HISTORIAL DE MOVIMIENTOS
+        // =========================================================================
+
+        async function verHistorial() {
+            showPage('historial');
+            const cont = document.getElementById('lista-hist');
+            filtroHistorial = 'Todos';
+            actualizarBotonesFiltro();
+
+            const locales = getDatosLocales();
+            if (locales.movs.length > 0) procesarYRenderizarHistorial(locales.prods, locales.movs);
+            else cont.innerHTML = '<div class="text-center py-10"><i class="fas fa-circle-notch fa-spin text-3xl text-slate-800 mb-2"></i><p class="text-slate-400 italic">Cargando...</p></div>';
+
+            try {
+                const frescos = await syncDatos();
+                procesarYRenderizarHistorial(frescos.prods, frescos.movs);
+            } catch (e) { 
+                if (locales.movs.length === 0) {
+                    cont.innerHTML = '<p class="text-center text-red-500 font-bold mt-10">Error al cargar.</p>';
+                    mostrarAlerta(e.message, "error");
+                }
+            }
+        }
+
+        function procesarYRenderizarHistorial(prods, movs) {
+            mapaNombresHistorial = {};
+            prods.forEach(p => mapaNombresHistorial[getId(p)] = p.NOMBRE);
+            datosHistorial = movs.reverse(); 
+            renderizarHistorial();
+        }
+
+        function filtrarHistorial(tipo) {
+            filtroHistorial = tipo;
+            actualizarBotonesFiltro();
+            renderizarHistorial();
+        }
+
+        function actualizarBotonesFiltro() {
+            const btnActivo = "flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow-sm text-slate-800 transition-all";
+            const btnInactivo = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition-all";
+            
+            document.getElementById('filtro-todos').className = filtroHistorial === 'Todos' ? btnActivo : btnInactivo;
+            document.getElementById('filtro-entradas').className = filtroHistorial === 'Entrada' ? btnActivo : btnInactivo;
+            document.getElementById('filtro-salidas').className = filtroHistorial === 'Salida' ? btnActivo : btnInactivo;
+        }
+
+        function renderizarHistorial() {
+            const cont = document.getElementById('lista-hist');
+
+            if(datosHistorial.length === 0) {
+                cont.innerHTML = '<p class="text-center text-slate-400 font-bold mt-10">El historial está vacío.</p>';
+                return;
+            }
+
+            let filtrados = datosHistorial;
+            if (filtroHistorial !== 'Todos') {
+                filtrados = datosHistorial.filter(m => m.TIPO === filtroHistorial);
+            }
+
+            if(filtrados.length === 0) {
+                cont.innerHTML = `<p class="text-center text-slate-400 font-bold mt-10">No hay movimientos de ${filtroHistorial.toLowerCase()}.</p>`;
+                return;
+            }
+
+            const paraMostrar = filtrados.slice(0, 20);
+
+            // Agregamos el index para saber si es uno de los primeros 3
+            cont.innerHTML = paraMostrar.map((m, index) => {
+                const nombreFinal = mapaNombresHistorial[m.PRODUCTO] || m.PRODUCTO || 'Producto Eliminado';
+                const idMov = getId(m);
+                
+                // Magia: Solo mostramos la crucecita roja si el índice es menor a 3 (los últimos 3 movimientos)
+                const botonAnular = index < 3 ? `<button onclick="borrarMovimiento('${idMov}')" class="ml-4 text-slate-300 active:text-red-500 transition-colors"><i class="fas fa-times-circle"></i></button>` : '';
+
+                return `
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="font-black text-slate-800">${nombreFinal}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">${fechaArg(m.FECHA)}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-black ${m.TIPO === 'Entrada' ? 'text-emerald-500' : 'text-red-500'} text-lg">${m.TIPO === 'Entrada' ? '+' : '-'}${m.CANTIDAD || 0}</span>
+                        ${botonAnular}
+                    </div>
+                </div>`
+            }).join('');
+        }
+
+        async function borrarMovimiento(idMov) {
+            mostrarConfirmacion("¿Anular este movimiento? Se ajustará el stock.", async () => {
+                try {
+                    mostrarAlerta("Anulando...", "info");
+                    // Mandamos la orden "Delete" directa al registro de movimiento
+                    await callAppSheet(API.mov, "Delete", [{ "Row ID": idMov }]);
+                    mostrarAlerta("Movimiento anulado correctamente", "exito");
+                    verHistorial(); // Refrescamos todo
+                } catch (e) {
+                    mostrarAlerta("Error al anular: " + e.message, "error");
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
