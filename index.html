@@ -204,7 +204,7 @@
         }
         
         async function enviarAlertaMail(nombreProd, stockActual, stockMin) {
-            const urlBackend = 'https://script.google.com/macros/s/AKfycby-xqsZNN4mp6vilUnle0i5M5iqbuD75UwklzAnI-MZ-5Kzsg7UBi0_hh5RemC-_W4uYg/exec';
+            const urlBackend = 'https://script.google.com/macros/s/AKfycbzkao_-QTEjQ6Py3l4lFlXFob8b2NdceH8BYrxj-mHOz17wCNNKJqiq8f6w5TL9jb0QMA/exec';
             try {
                 // Lo mandamos usando fetch, sin "await" para que no congele la pantalla del usuario
                 fetch(urlBackend, {
@@ -292,7 +292,7 @@
         // =========================================================================
 
         async function callAppSheet(tableName, action, rows = []) {
-            const urlBackend = 'https://script.google.com/macros/s/AKfycby-xqsZNN4mp6vilUnle0i5M5iqbuD75UwklzAnI-MZ-5Kzsg7UBi0_hh5RemC-_W4uYg/exec';
+            const urlBackend = 'https://script.google.com/macros/s/AKfycbzkao_-QTEjQ6Py3l4lFlXFob8b2NdceH8BYrxj-mHOz17wCNNKJqiq8f6w5TL9jb0QMA/exec';
             
             try {
                 const response = await fetch(urlBackend, {
