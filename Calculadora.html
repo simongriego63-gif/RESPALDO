@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Porcentajes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .contenedor {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            text-align: left;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box; /* Para que el padding no desborde el input */
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #resultado {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .error {
+            color: red !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor">
+        <h2>Calculadora de Notas</h2>
+        
+        <label for="notaAlumno">Nota del alumno:</label>
+        <input type="number" id="notaAlumno" placeholder="Ej: 8" step="any">
+        
+        <label for="notaMaxima">Nota máxima posible:</label>
+        <input type="number" id="notaMaxima" placeholder="Ej: 10" step="any">
+        
+        <button onclick="calcularPorcentaje()">Calcular Porcentaje</button>
+        
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        function calcularPorcentaje() {
+            // Obtenemos los valores ingresados por el usuario
+            let nota = parseFloat(document.getElementById('notaAlumno').value);
+            let maxima = parseFloat(document.getElementById('notaMaxima').value);
+            let cajaResultado = document.getElementById('resultado');
+
+            // Validamos que los campos no estén vacíos
+            if (isNaN(nota) || isNaN(maxima)) {
+                cajaResultado.innerHTML = "Por favor, ingresá ambos números.";
+                cajaResultado.className = "error";
+                return;
+            }
+
+            // Validamos que la nota máxima no sea cero ni negativa
+            if (maxima <= 0) {
+                cajaResultado.innerHTML = "La nota máxima debe ser mayor a 0.";
+                cajaResultado.className = "error";
+                return;
+            }
+
+            // Calculamos el porcentaje
+            let porcentaje = (nota / maxima) * 100;
+
+            // Mostramos el resultado redondeado a 2 decimales para mayor claridad
+            cajaResultado.innerHTML = "El alumno sacó un:<br><span style='font-size: 24px; color: #007bff;'>" + porcentaje.toFixed(2) + "%</span>";
+            cajaResultado.className = ""; // Limpiamos la clase de error si estaba puesta
+        }
+    </script>
+
+</body>
+</html>
